@@ -57,7 +57,6 @@ namespace ackermann_steering_controller
   , angular_(0.0)
   , wheel_separation_h_(0.0)
   , wheel_radius_(0.0)
-  , rear_wheel_old_pos_(0.0)
   , velocity_rolling_window_size_(velocity_rolling_window_size)
   , linear_acc_(RollingWindow::window_size = velocity_rolling_window_size)
   , angular_acc_(RollingWindow::window_size = velocity_rolling_window_size)
@@ -72,21 +71,12 @@ namespace ackermann_steering_controller
     timestamp_ = time;
   }
 
-  bool Odometry::update(double rear_wheel_pos, double front_steer_pos, const ros::Time &time)
+  bool Odometry::update(double rear_wheel_vel, double front_steer_pos, const ros::Time &time)
   {
-    /// Get current wheel joint positions:
-    const double rear_wheel_cur_pos = rear_wheel_pos * wheel_radius_ ;
-
-    /// Estimate velocity of wheels using old and current position:
-    const double rear_wheel_est_vel = rear_wheel_cur_pos - rear_wheel_old_pos_;
-
-    /// Update old position with current:
-    rear_wheel_old_pos_ = rear_wheel_cur_pos;
-
     /// Compute linear and angular diff:
-    const double linear  = rear_wheel_est_vel;
-    
-    const double angular = linear / (wheel_separation_h_ / (front_steer_pos + 1e-10));
+    const double linear  = rear_wheel_vel;
+
+    const double angular = (linear * front_steer_pos) / wheel_separation_h_;
 
     /// Integrate odometry:
     integrate_fun_(linear, angular);
