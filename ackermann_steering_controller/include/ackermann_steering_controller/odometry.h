@@ -80,12 +80,12 @@ namespace ackermann_steering_controller
 
     /**
      * \brief Updates the odometry class with latest wheels position
-     * \param rear_wheel_pos  Rear wheel position [rad]
+     * \param rear_wheel_vel  Rear wheel velocity [m/s]
      * \param front_steer_pos Front Steer position [rad]
      * \param time      Current time
      * \return true if the odometry is actually updated
      */
-    bool update(double rear_wheel_pos, double front_steer_pos, const ros::Time &time);
+    bool update(double rear_wheel_vel, double front_steer_pos, const ros::Time &time);
 
     /**
      * \brief Updates the odometry class with latest velocity command
@@ -193,9 +193,6 @@ namespace ackermann_steering_controller
     /// Wheel kinematic parameters [m]:
     double wheel_separation_h_;
     double wheel_radius_;
-
-    /// Previous wheel position/state [rad]:
-    double rear_wheel_old_pos_;
 
     /// Rolling mean accumulators for the linar and angular velocities:
     size_t velocity_rolling_window_size_;

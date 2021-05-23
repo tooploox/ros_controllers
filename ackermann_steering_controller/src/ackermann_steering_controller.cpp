@@ -265,15 +265,15 @@ namespace ackermann_steering_controller{
     }
     else
     {
-      double wheel_pos  = rear_wheel_joint_.getPosition();
+      double rear_wheel_vel  = rear_wheel_joint_.getVelocity();
       double steer_pos = front_steer_joint_.getPosition();
 
-      if (std::isnan(wheel_pos) || std::isnan(steer_pos))
+      if (std::isnan(rear_wheel_vel) || std::isnan(steer_pos))
         return;
 
       // Estimate linear and angular velocity using joint information
       steer_pos = steer_pos * steer_pos_multiplier_;
-      odometry_.update(wheel_pos, steer_pos, time);
+      odometry_.update(rear_wheel_vel, steer_pos, time);
     }
 
     // Publish odometry message
@@ -330,9 +330,16 @@ namespace ackermann_steering_controller{
     last0_cmd_ = curr_cmd;
 
     // Set Command
-    const double wheel_vel = curr_cmd.lin/wheel_radius_; // omega = linear_vel / radius
+    const double wheel_vel = curr_cmd.lin / (wheel_radius_ * wheel_radius_multiplier_);
+    // Angular velocity = linear velocity(V) / turning radius
+    // turning radius = horizontal wheel separation / steering angle + (steering sensitivity * V^2 / steering angle)
+    // For the simplicity we assume that steering sensitivity(K) = 0
+    const double steering_ang =
+    (curr_cmd.ang * wheel_separation_h_ * wheel_separation_h_multiplier_) / (curr_cmd.lin + 1e-10);
     rear_wheel_joint_.setCommand(wheel_vel);
-    front_steer_joint_.setCommand(curr_cmd.ang);
+    // The limit is set on angular velocity and not steering angle.
+    // The controller isn't aware of any limitations of actual joints.
+    front_steer_joint_.setCommand(steering_ang);
 
   }
 
