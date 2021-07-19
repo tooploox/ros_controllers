@@ -331,11 +331,22 @@ namespace ackermann_steering_controller{
 
     // Set Command
     const double wheel_vel = curr_cmd.lin / (wheel_radius_ * wheel_radius_multiplier_);
-    // Angular velocity = linear velocity(V) / turning radius
-    // turning radius = horizontal wheel separation / steering angle + (steering sensitivity * V^2 / steering angle)
-    // For the simplicity we assume that steering sensitivity(K) = 0
-    const double steering_ang =
+    /* Angular velocity = linear velocity(V) / turning radius
+      turning radius = horizontal wheel separation / steering angle + (steering sensitivity * V^2 / steering angle)
+      For the simplicity we assume that steering sensitivity(K) = 0 */
+    double steering_ang =
     (curr_cmd.ang * wheel_separation_h_ * wheel_separation_h_multiplier_) / (curr_cmd.lin + 1e-10);
+
+
+    /* When linear velocity changes the sign it causes sudden
+       changes in steering angle from one extermum to another.
+       Setting angular speed to 0 first will smooth the transition
+       according to the controller's logic */
+    if (std::signbit(last1_cmd_.lin) != std::signbit(curr_cmd.lin)) {
+      last0_cmd_.ang = 0;
+      steering_ang = 0;
+    };
+
     rear_wheel_joint_.setCommand(wheel_vel);
     // The limit is set on angular velocity and not steering angle.
     // The controller isn't aware of any limitations of actual joints.
