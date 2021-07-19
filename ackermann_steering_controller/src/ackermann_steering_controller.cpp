@@ -265,7 +265,7 @@ namespace ackermann_steering_controller{
     }
     else
     {
-      double wheel_pos  = rear_wheel_joint_.getVelocity();
+      double wheel_pos  = rear_wheel_joint_.getPosition();
       double steer_pos = front_steer_joint_.getPosition();
 
       if (std::isnan(wheel_pos) || std::isnan(steer_pos))
